@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 >nul
+setlocal enabledelayedexpansion
 echo ==========================================
 echo Загрузка изменений на GitHub
 echo ==========================================
@@ -20,9 +21,23 @@ if not exist .git (
     exit /b 1
 )
 
-:: Ввод комментария к коммиту
-set /p commit_msg="Введите комментарий к обновлению (например, 'Обновлен дизайн'): "
+:: Ввод комментария к коммиту (можно передать как параметр %1)
+if "%~1"=="" (
+    set /p commit_msg="Введите комментарий к обновлению (например, 'Обновлен дизайн'): "
+) else (
+    set "commit_msg=%~1"
+    echo Используем сообщение из параметра: !commit_msg!
+)
 if "%commit_msg%"=="" set commit_msg="Автоматическое обновление"
+
+:: Ввод имени ветки (можно передать как параметр %2)
+if "%~2"=="" (
+    set /p branch_name="Введите имя ветки (по умолчанию master): "
+) else (
+    set "branch_name=%~2"
+    echo Используем ветку из параметра: !branch_name!
+)
+if "%branch_name%"=="" set branch_name=master
 
 echo.
 echo [1/4] Добавление файлов...
@@ -32,8 +47,7 @@ echo [2/4] Создание коммита...
 git commit -m "%commit_msg%"
 
 echo [3/4] Отправка на сервер (GitHub)...
-:: Если ветка называется master, замените main на master в следующей строке
-git push origin master
+git push origin %branch_name%
 
 if %errorlevel% equ 0 (
     echo.
